@@ -41,3 +41,10 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+#svn folders
+.svn
+Debug
+Release
+sqlite3
+__history

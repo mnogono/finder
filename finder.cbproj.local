@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899.12.30 00:00:00.000.381,=C:\W\mnemoshema\lib\sysProcess.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.005,C:\W\finder\Chart.h=C:\W\finder\Unit1.h</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.162,=C:\W\mnemoshema\lib\sysApp.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.443,=C:\W\mnemoshema\lib\sysTime.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.256,=C:\W\mnemoshema\lib\sysFind.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.819,C:\W\FindImagesExUI\FindImagexExUI.h=C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Unit2.h</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.349,=C:\W\mnemoshema\lib\sysOO.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.005,C:\W\finder\Chart.cpp=C:\W\finder\Unit1.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.443,=C:\W\mnemoshema\lib\sysStr.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.475,C:\W\FindImagesExUI\ProjectFindImagesExUI.cbproj=C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Project4.cbproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.895,C:\W\FindImagesExUI\ProjectFindImagesExUI.cbproj=C:\W\FindImagesExUI\FindFiles.cbproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.287,=C:\W\mnemoshema\lib\sysJSON.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.750,C:\W\finder\Chart.cpp=</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.318,=C:\W\mnemoshema\lib\sysMath.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.209,=C:\W\mnemoshema\lib\sysException.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.260,=C:\W\finder\sqlite3.h</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.491,=C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Project4.res</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.819,C:\W\FindImagesExUI\FindImagexExUI.dfm=C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Unit2.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.463,=C:\W\finder\Unit1.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.201,=C:\W\mnemoshema\lib\logger.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.474,=C:\W\mnemoshema\lib\sysVCL.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.224,=C:\W\mnemoshema\lib\sysFile.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.669,C:\W\finder\finder.cbproj=C:\W\finder\FindFiles.cbproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.819,C:\W\FindImagesExUI\FindImagexExUI.cpp=C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Unit2.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.604,=C:\W\finder\sqlite3.c</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.522,=C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Unit2.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.302,=C:\W\mnemoshema\lib\sysKey.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.005,C:\W\finder\Chart.dfm=C:\W\finder\Unit1.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.436,=C:\W\mnemoshema\lib\logger.h</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.412,=C:\W\mnemoshema\lib\sysReg.cpp</Transaction>
+  </Transactions>
+</BorlandProject>

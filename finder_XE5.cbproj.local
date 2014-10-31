@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899.12.30 00:00:00.000.819,C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Unit2.dfm=C:\W\FindImagesExUI\FindImagexExUI.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.819,C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Unit2.h=C:\W\FindImagesExUI\FindImagexExUI.h</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.475,C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Project4.cbproj=C:\W\FindImagesExUI\ProjectFindImagesExUI.cbproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.819,C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Unit2.cpp=C:\W\FindImagesExUI\FindImagexExUI.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.895,C:\W\FindImagesExUI\FindFiles.cbproj=C:\W\FindImagesExUI\ProjectFindImagesExUI.cbproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.669,C:\W\finder\FindFiles.cbproj=C:\W\finder\finder.cbproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.791,D:\W\finder\finder.cbproj=D:\W\finder\finder_XE5.cbproj</Transaction>
+  </Transactions>
+</BorlandProject>
