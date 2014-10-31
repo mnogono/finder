@@ -13,6 +13,10 @@
 #include <Dialogs.hpp>
 #include <ComCtrls.hpp>
 #include <Menus.hpp>
+#include "Chart.hpp"
+#include "Series.hpp"
+#include "TeEngine.hpp"
+#include "TeeProcs.hpp"
 #include <vector>
 #include <string>
 #include <DBXJSON.hpp>
@@ -148,6 +152,7 @@ public:		// User declarations
 
     sqlite3 *db;
     sqlite3_stmt *stmtInsertFile;
+    sqlite3_stmt *stmtDeleteFile;
 
 	__fastcall TForm2(TComponent* Owner);
     void __fastcall SaveUserSettings();
@@ -159,6 +164,8 @@ public:		// User declarations
     void __fastcall SaveResultsToLogFile(const String &file);
     void __fastcall InitializeSQLiteDB();
     void __fastcall CloseDB();
+    void __fastcall DeleteDBFile(const TFile *file, double scanDate);
+    void __fastcall AddDBFile(const TFile *file, double scanDate);
 };
 //---------------------------------------------------------------------------
 extern PACKAGE TForm2 *Form2;

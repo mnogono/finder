@@ -5,6 +5,7 @@
 #include <tchar.h>
 //---------------------------------------------------------------------------
 USEFORM("FindImagexExUI.cpp", Form2);
+USEFORM("Chart.cpp", FormChart);
 //---------------------------------------------------------------------------
 WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int)
 {
@@ -13,6 +14,7 @@ WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int)
 		Application->Initialize();
 		Application->MainFormOnTaskBar = true;
 		Application->CreateForm(__classid(TForm2), &Form2);
+		Application->CreateForm(__classid(TFormChart), &FormChart);
 		Application->Run();
 	}
 	catch (Exception &exception)

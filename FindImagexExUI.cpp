@@ -8,6 +8,10 @@
 
 // ---------------------------------------------------------------------------
 #pragma package(smart_init)
+#pragma link "Chart"
+#pragma link "Series"
+#pragma link "TeEngine"
+#pragma link "TeeProcs"
 #pragma resource "*.dfm"
 TForm2 *Form2;
 
@@ -252,9 +256,9 @@ void __fastcall TForm2::SaveUserSettings(){
 	sysApp::SetSetting(L"ApplicationHeight", IntToStr(Height).c_str());
 }
 
-// ---------------------------------------------------------------------------
 void __fastcall TForm2::CloseDB(){
 	sqlite3_finalize(stmtInsertFile);
+	sqlite3_finalize(stmtDeleteFile);
     sqlite3_close(db);
 }
 
@@ -311,11 +315,18 @@ void __fastcall TForm2::PrepareStatments() {
     }
 
     std::stringstream ss;
+
+    //prepare insert file statment
     ss.str("");
+    ss << "INSERT INTO file (path, created, scan_date) VALUES (?1, ?2, ?3)";
 
-    ss << "INSERT INTO file (path, created, scan_id) VALUES (?, ?, ?)";
+	sqlite3_prepare(db, ss.str().c_str(), ss.str().size(), &stmtInsertFile, NULL);
 
-	sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmtInsertFile, NULL);
+    //prepare delete file statment
+    ss.str("");
+    ss << "DELETE FROM file where path = ?1 and created = ?2 and scan_date = ?3";
+
+    sqlite3_prepare(db, ss.str().c_str(), ss.str().size(), &stmtDeleteFile, NULL);
 }
 
 // ---------------------------------------------------------------------------
@@ -332,10 +343,10 @@ void __fastcall TForm2::InitializeSQLiteDB() {
 
     //create table file
     ss << "CREATE TABLE IF NOT EXISTS file ("
-		<< " id       INTEGER PRIMARY KEY ASC AUTOINCREMENT NOT NULL"
-        << ",path     VARCHAR(1024)                         NOT NULL"
-        << ",created  REAL                                  NOT NULL"
-        << ",scan_id  INTEGER                               NOT NULL);";
+		<< " id        INTEGER PRIMARY KEY ASC AUTOINCREMENT NOT NULL"
+        << ",path      VARCHAR(1024)                         NOT NULL"
+        << ",created   REAL                                  NOT NULL"
+        << ",scan_date REAL                                  NOT NULL);";
 
     sqlite3_exec(db, ss.str().c_str(), NULL, NULL, &err);
     if (err != NULL) {
@@ -344,6 +355,7 @@ void __fastcall TForm2::InitializeSQLiteDB() {
 	    sqlite3_free(err);
     }
 
+    /*
     //create table scan
     ss.str("");
     ss << "CREATE TABLE IF NOT EXISTS scan ("
@@ -357,6 +369,7 @@ void __fastcall TForm2::InitializeSQLiteDB() {
         TLogger::logger->Error(err, __FILE__, __FUNCTION__, __LINE__);
 	    sqlite3_free(err);
     }
+	*/
 
     PrepareStatments();
 }
@@ -469,18 +482,120 @@ void __fastcall TForm2::ButtonStopSearchClick(TObject *Sender){
 		}
 	}
 }
-// ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+void __fastcall TForm2::DeleteDBFile(const TFile *file, double scanDate) {
+	//delete exisiting file from db
+    char *sPath;
+    int iPathSize;
+	char log[255];
+    int errCode;
+
+    sysStr::WideCharToUTF8(
+        file->sFilePath.c_str(),
+        file->sFilePath.size(),
+        sPath,
+        iPathSize);
+
+	//ss << "DELETE FROM file where path = '?' and created = ? and scan_date = ?";
+
+    errCode = sqlite3_bind_text(
+        stmtDeleteFile,
+        1,
+        sPath,
+        iPathSize,
+        NULL);
+
+    if (errCode != SQLITE_OK) {
+        sprintf(log, "error code: %d", errCode);
+        TLogger::logger->Error(log, __FILE__, __FUNCTION__, __LINE__);
+    }
+
+    errCode = sqlite3_bind_double(
+        stmtDeleteFile,
+        2,
+        file->created);
+
+    if (errCode != SQLITE_OK) {
+        sprintf(log, "error code: %d", errCode);
+        TLogger::logger->Error(log, __FILE__, __FUNCTION__, __LINE__);
+    }
+
+    errCode = sqlite3_bind_double(
+        stmtDeleteFile,
+        3,
+        scanDate);
+
+    if (errCode != SQLITE_OK) {
+        sprintf(log, "error code: %d", errCode);
+        TLogger::logger->Error(log, __FILE__, __FUNCTION__, __LINE__);
+    }
+
+    if (sqlite3_step(stmtDeleteFile) != SQLITE_DONE) {
+        TLogger::logger->Error("stmtDeleteFile != SQLITE_DONE", __FILE__, __FUNCTION__, __LINE__);
+    }
+
+    sqlite3_reset(stmtDeleteFile);
+}
+
+// ---------------------------------------------------------------------------
+void __fastcall TForm2::AddDBFile(const TFile *file, double scanDate) {
+    //add new row in db
+    char *sPath;
+    int iPathSize;
+	char log[255];
+    int errCode;
+
+    //"INSERT INTO file (path, created, scan_date) VALUES ('?1', ?2, ?3)";
+    sysStr::WideCharToUTF8(
+        file->sFilePath.c_str(),
+        file->sFilePath.size(),
+        sPath,
+        iPathSize);
+
+    errCode = sqlite3_bind_text(
+        stmtInsertFile,
+        1,
+        sPath,
+        iPathSize,
+        NULL);
+
+    if (errCode != SQLITE_OK) {
+        sprintf(log, "error code: %d", errCode);
+        TLogger::logger->Error(log, __FILE__, __FUNCTION__, __LINE__);
+    }
+
+    errCode = sqlite3_bind_double(
+        stmtInsertFile,
+        2,
+        file->created);
+
+    if (errCode != SQLITE_OK) {
+        sprintf(log, "error code: %d", errCode);
+        TLogger::logger->Error(log, __FILE__, __FUNCTION__, __LINE__);
+    }
+
+    errCode = sqlite3_bind_double(
+        stmtInsertFile,
+        3,
+        scanDate);
+
+    if (errCode != SQLITE_OK) {
+        sprintf(log, "error code: %d", errCode);
+        TLogger::logger->Error(log, __FILE__, __FUNCTION__, __LINE__);
+    }
+
+    if (sqlite3_step(stmtInsertFile) != SQLITE_DONE) {
+        TLogger::logger->Error("stmtInsertFile != SQLITE_DONE", __FILE__, __FUNCTION__, __LINE__);
+    }
+
+    sqlite3_reset(stmtInsertFile);
+}
+
+// ---------------------------------------------------------------------------
 void __fastcall TForm2::TimerSyncFindBufferTimer(TObject *Sender){
 	if (!finderThread){
 		return;
-	}
-
-	if (InterlockedCompareExchange(&finderThread->isWorking, finderThread->isWorking, finderThread->isWorking) == 0){
-		if (InterlockedCompareExchange((LONG *) &finderThread->isFinished, (LONG)false, (LONG)true) == true){
-        	SaveResultsToLogFile(EditLogFile->Text);
-			MessageBox(NULL, L"Поиск завершен", L"Сообщение", MB_OK);
-		}
 	}
 
     std::stringstream ss;
@@ -488,94 +603,52 @@ void __fastcall TForm2::TimerSyncFindBufferTimer(TObject *Sender){
 	EnterCriticalSection(&csSycnFindBuffer);
 
 	if (finderThread->findFilesBuffer.size()) {
-		String sFilePath;
-		TFile *file;
-		int errCode;
-		char *errMsg = NULL;
+        double scanDate;
+        TDateTime dtNow = Now();
+        scanDate = dtNow.CurrentDate().Val;
 
-		if (db != NULL) {
-			sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &errMsg);
-			if (errMsg != NULL) {
-				sqlite3_free(errMsg);
-				TLogger::logger->Error(errMsg, __FILE__, __FUNCTION__, __LINE__);
-			}
-		}
+        String sFilePath;
+        TFile *file;
+        char *errMsg;
 
-		// display all buffers in String Grid Results
-		for (size_t itFile = 0; itFile < finderThread->findFilesBuffer.size(); ++itFile){
-			file = &finderThread->findFilesBuffer[itFile];
+        sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &errMsg);
+        if (errMsg != NULL) {
+            sqlite3_free(errMsg);
+            TLogger::logger->Error(errMsg, __FILE__, __FUNCTION__, __LINE__);
+        }
 
-			StringGridResults->Cells[0][StringGridResults->RowCount - 1] = String(file->sCreated.c_str());
-			StringGridResults->Cells[1][StringGridResults->RowCount - 1] = String(file->sFilePath.c_str());
-			StringGridResults->RowCount += 1;
+        // display all buffers in String Grid Results
+        for (size_t itFile = 0; itFile < finderThread->findFilesBuffer.size(); ++itFile){
+            file = &finderThread->findFilesBuffer[itFile];
 
-			//add new row in db
-			if (db != NULL) {
-				char *sValue;
-				int iValueSize;
+            StringGridResults->Cells[0][StringGridResults->RowCount - 1] = String(file->sCreated.c_str());
+            StringGridResults->Cells[1][StringGridResults->RowCount - 1] = String(file->sFilePath.c_str());
+            StringGridResults->RowCount += 1;
 
-				sysStr::WideCharToUTF8(
-					file->sFilePath.c_str(),
-					file->sFilePath.size(),
-					sValue,
-					iValueSize);
+            if (db != NULL) {
+                DeleteDBFile(file, scanDate);
+                AddDBFile(file, scanDate);
+            }
+        }
 
-				errCode = sqlite3_bind_text(
-					stmtInsertFile,
-					1,
-					sValue,
-					iValueSize,
-					NULL);
+        sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, &errMsg);
+        if (errMsg != NULL) {
+            sqlite3_free(errMsg);
+            TLogger::logger->Error(errMsg, __FILE__, __FUNCTION__, __LINE__);
+        }
 
-				if (errCode != SQLITE_OK) {
-					char log[255];
-					sprintf(log, "error code: %d", errCode);
-					TLogger::logger->Error(log, __FILE__, __FUNCTION__, __LINE__);
-				}
-
-				errCode = sqlite3_bind_double(
-					stmtInsertFile,
-					2,
-					file->created);
-
-				if (errCode != SQLITE_OK) {
-					char log[255];
-					sprintf(log, "error code: %d", errCode);
-					TLogger::logger->Error(log, __FILE__, __FUNCTION__, __LINE__);
-				}
-
-				errCode = sqlite3_bind_int(
-					stmtInsertFile,
-					3,
-					1);
-
-				if (errCode != SQLITE_OK) {
-					char log[255];
-					sprintf(log, "error code: %d", errCode);
-					TLogger::logger->Error(log, __FILE__, __FUNCTION__, __LINE__);
-				}
-
-				if (sqlite3_step(stmtInsertFile) != SQLITE_DONE) {
-					TLogger::logger->Error("Could not step (execute) stmt", __FILE__, __FUNCTION__, __LINE__);
-				}
-
-				sqlite3_reset(stmtInsertFile);
-			}
-		}
-
-		if (db != NULL) {
-			sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, &errMsg);
-			if (errMsg != NULL) {
-				sqlite3_free(errMsg);
-				TLogger::logger->Error(errMsg, __FILE__, __FUNCTION__, __LINE__);
-			}
-		}
-
-		// Clear finder files buffer
-		finderThread->findFilesBuffer.clear();
-	}
+        // Clear finder files buffer
+        finderThread->findFilesBuffer.clear();
+    }
 
 	LeaveCriticalSection(&csSycnFindBuffer);
+
+	if (InterlockedCompareExchange(&finderThread->isWorking, finderThread->isWorking, finderThread->isWorking) == 0){
+		if (InterlockedCompareExchange((LONG *) &finderThread->isFinished, (LONG)false, (LONG)true) == true){
+        	SaveResultsToLogFile(EditLogFile->Text);
+			MessageBox(NULL, L"Поиск завершен", L"Сообщение", MB_OK);
+		}
+	}
 
 	String statusText;
 	statusText = statusText.sprintf(L"Файлов проверено: %d Файлов найдено: %d", InterlockedExchange(&finderThread->lScanFiles, finderThread->lScanFiles),
