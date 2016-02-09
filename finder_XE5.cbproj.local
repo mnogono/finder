@@ -1,12 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<Transactions>
-    <Transaction>1899.12.30 00:00:00.000.819,C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Unit2.dfm=C:\W\FindImagesExUI\FindImagexExUI.dfm</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.819,C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Unit2.h=C:\W\FindImagesExUI\FindImagexExUI.h</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.475,C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Project4.cbproj=C:\W\FindImagesExUI\ProjectFindImagesExUI.cbproj</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.819,C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Unit2.cpp=C:\W\FindImagesExUI\FindImagexExUI.cpp</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.895,C:\W\FindImagesExUI\FindFiles.cbproj=C:\W\FindImagesExUI\ProjectFindImagesExUI.cbproj</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.669,C:\W\finder\FindFiles.cbproj=C:\W\finder\finder.cbproj</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.791,D:\W\finder\finder.cbproj=D:\W\finder\finder_XE5.cbproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.515,=G:\doc\programming project\builderXE\MimicPanel\lib\sysKey.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.895,C:\W\FindImagesExUI\ProjectFindImagesExUI.cbproj=C:\W\FindImagesExUI\FindFiles.cbproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.475,C:\W\FindImagesExUI\ProjectFindImagesExUI.cbproj=C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Project4.cbproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.791,D:\W\finder\finder_XE5.cbproj=D:\W\finder\finder.cbproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.693,=D:\W\mnemoshema\lib\sysReg.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.819,C:\W\FindImagesExUI\FindImagexExUI.cpp=C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Unit2.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.819,C:\W\FindImagesExUI\FindImagexExUI.h=C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Unit2.h</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.494,=G:\doc\programming project\builderXE\MimicPanel\lib\sysApp.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.819,C:\W\FindImagesExUI\FindImagexExUI.dfm=C:\Documents and Settings\Administrator\My Documents\RAD Studio\Projects\Unit2.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.502,=G:\doc\programming project\builderXE\MimicPanel\lib\sysFile.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.628,=D:\W\mnemoshema\lib\sysMath.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.669,C:\W\finder\finder.cbproj=C:\W\finder\FindFiles.cbproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.542,=D:\W\mnemoshema\lib\sysApp.cpp</Transaction>
   </Transactions>
 </BorlandProject>

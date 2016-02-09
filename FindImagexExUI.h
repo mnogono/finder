@@ -13,15 +13,16 @@
 #include <Dialogs.hpp>
 #include <ComCtrls.hpp>
 #include <Menus.hpp>
-#include "Chart.hpp"
-#include "Series.hpp"
-#include "TeEngine.hpp"
-#include "TeeProcs.hpp"
 #include <vector>
 #include <string>
 #include <DBXJSON.hpp>
 #include <winnt.h>
 #include <jpeg.hpp>
+
+#if __CODEGEARC__ == 0x0670
+	//0x0670 for C++Builder XE5 (BCC32, BCC64, BCCOSX, and BCCIOSARM).
+	#include <VclTee.TeeGDIPlus.hpp>
+#endif
 
 #include "sysApp.h"
 #include "sysVCL.h"
@@ -29,6 +30,9 @@
 #include "sysFind.h"
 #include "sqlite3.h"
 #include "logger.h"
+#include "ChartView.h"
+
+#include <XMLDoc.hpp>
 
 //---------------------------------------------------------------------------
 struct TFile{
@@ -101,8 +105,8 @@ __published:	// IDE-managed Components
 	TEdit *EditExtensions;
 	TPanel *Panel8;
 	TLabel *Label5;
-	TEdit *EditLogFile;
-	TSaveDialog *SaveDialog1;
+	TEdit *EditLogFolder;
+	TSaveDialog *SaveDialogSettingsXML;
 	TDateTimePicker *DateTimePickerCreated;
 	TPopupMenu *PopupMenuInclude;
 	TMenuItem *DeleteInclude;
@@ -122,6 +126,13 @@ __published:	// IDE-managed Components
     TStringGrid *StringGridResults;
 	TMainMenu *MainMenu1;
 	TMenuItem *MMChart;
+	TOpenDialog *OpenDialogSettingsXML;
+	TPanel *Panel10;
+	TLabel *Label4;
+	TEdit *EditFilter;
+	TMenuItem *N1;
+	TMenuItem *MMSave;
+	TMenuItem *MMLoad;
 	void __fastcall ButtonStartSearchClick(TObject *Sender);
 	void __fastcall FormClose(TObject *Sender, TCloseAction &Action);
 	void __fastcall FormCreate(TObject *Sender);
@@ -143,10 +154,15 @@ __published:	// IDE-managed Components
 	void __fastcall ButtonIncludeDelClick(TObject *Sender);
 	void __fastcall ButtonSaveLogFileClick(TObject *Sender);
 	void __fastcall MMChartClick(TObject *Sender);
+	void __fastcall EditFilterChange(TObject *Sender);
+	void __fastcall MMSaveClick(TObject *Sender);
+	void __fastcall MMLoadClick(TObject *Sender);
 private:	// User declarations
 	void __fastcall PrepareStatments();
+	double scanDateTime;
 public:		// User declarations
-	std::vector<TFile> findFilesBuffer;
+	bool isRunWithCommandLine;
+	std::vector<TFile> dataSourceStringGridResult;
 	TFinderThread *finderThread;
 	sysFind::TXMLSettings xmlSettings;
 
@@ -165,7 +181,8 @@ public:		// User declarations
     void __fastcall InitializeSQLiteDB();
     void __fastcall CloseDB();
     void __fastcall DeleteDBFile(const TFile *file, double scanDate);
-    void __fastcall AddDBFile(const TFile *file, double scanDate);
+	void __fastcall AddDBFile(const TFile *file, double scanDate);
+	void __fastcall StartFinder();
 };
 //---------------------------------------------------------------------------
 extern PACKAGE TForm2 *Form2;

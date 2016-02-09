@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <settings>
 	<operation type="find" entity="file">
-		<criteria name="created" op="lt" value="24.10.2014 00:00:00" group="and"/>
+		<criteria name="age" op="gt" value="0" group="and"/>
 		<criteria name="ext" op="eq" value="pdf" group="or"/>
 		<criteria name="ext" op="eq" value="jpg" group="or"/>
 		<criteria name="ext" op="eq" value="bmp" group="or"/>
-		<criteria name="size" op="gt" value="0" group="and"/>
-		<include folder="C:\"/>
-		<exclude folder="C:\archive\"/>
+		<include folder="D:\exchange\123\"/>
 	</operation>
 </settings>

@@ -28,9 +28,6 @@ Coordinates=380,282,54,58
 [DateTimePickerCreated]
 Coordinates=145,78,152,58
 
-[SaveDialog1]
-Coordinates=351,365,87,36
-
 [Button6]
 Coordinates=390,214,59,58
 
@@ -91,9 +88,6 @@ Coordinates=371,78,119,58
 [DeleteInclude]
 Coordinates=860,56,93,36
 
-[EditLogFile]
-Coordinates=10,10,79,58
-
 [Panel1]
 Coordinates=456,146,54,58
 
@@ -126,4 +120,10 @@ Coordinates=222,461,88,36
 
 []
 Coordinates=139,146,53,58
+
+[EditLogFolder]
+Coordinates=10,10,79,58
+
+[SaveDialogSettingsXML]
+Coordinates=351,365,87,36
 

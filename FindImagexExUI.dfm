@@ -255,19 +255,19 @@ object Form2: TForm2
         Height = 16
         Align = alLeft
         AutoSize = False
-        Caption = #1060#1072#1081#1083' '#1083#1086#1075#1086#1074
+        Caption = #1055#1072#1087#1082#1072' '#1083#1086#1075#1086#1074
         ExplicitLeft = 1
         ExplicitTop = 1
         ExplicitHeight = 22
       end
-      object EditLogFile: TEdit
+      object EditLogFolder: TEdit
         Left = 87
         Top = 1
         Width = 217
         Height = 22
         Align = alClient
         TabOrder = 0
-        Text = 'EditLogFile'
+        Text = 'EditLogFolder'
         ExplicitHeight = 21
       end
       object ButtonSaveLogFile: TButton
@@ -320,7 +320,7 @@ object Form2: TForm2
     object Label6: TLabel
       AlignWithMargins = True
       Left = 4
-      Top = 4
+      Top = 28
       Width = 424
       Height = 13
       Align = alTop
@@ -329,9 +329,9 @@ object Form2: TForm2
     end
     object StringGridResults: TStringGrid
       Left = 1
-      Top = 20
+      Top = 44
       Width = 430
-      Height = 560
+      Height = 536
       Align = alClient
       ColCount = 2
       FixedCols = 0
@@ -372,6 +372,34 @@ object Form2: TForm2
         OnClick = Button6Click
       end
     end
+    object Panel10: TPanel
+      Left = 1
+      Top = 1
+      Width = 430
+      Height = 24
+      Align = alTop
+      TabOrder = 2
+      object Label4: TLabel
+        AlignWithMargins = True
+        Left = 4
+        Top = 4
+        Width = 38
+        Height = 16
+        Align = alLeft
+        Caption = #1060#1080#1083#1100#1090#1088
+        ExplicitHeight = 13
+      end
+      object EditFilter: TEdit
+        Left = 45
+        Top = 1
+        Width = 384
+        Height = 22
+        Align = alClient
+        TabOrder = 0
+        OnChange = EditFilterChange
+        ExplicitHeight = 21
+      end
+    end
   end
   object StatusBar: TStatusBar
     Left = 0
@@ -381,7 +409,9 @@ object Form2: TForm2
     Panels = <>
     SimplePanel = True
   end
-  object SaveDialog1: TSaveDialog
+  object SaveDialogSettingsXML: TSaveDialog
+    DefaultExt = 'xml'
+    Filter = 'settings (xml)|*.xml'
     Left = 256
     Top = 288
   end
@@ -421,9 +451,26 @@ object Form2: TForm2
   object MainMenu1: TMainMenu
     Left = 376
     Top = 312
+    object N1: TMenuItem
+      Caption = #1052#1077#1085#1102
+      object MMSave: TMenuItem
+        Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
+        OnClick = MMSaveClick
+      end
+      object MMLoad: TMenuItem
+        Caption = #1047#1072#1075#1088#1091#1079#1082#1072
+        OnClick = MMLoadClick
+      end
+    end
     object MMChart: TMenuItem
-      Caption = #1043#1088#1072#1092#1080#1082
+      Caption = #1048#1089#1090#1086#1088#1080#1103
       OnClick = MMChartClick
     end
+  end
+  object OpenDialogSettingsXML: TOpenDialog
+    DefaultExt = 'xml'
+    Filter = 'settings (xml)|*.xml'
+    Left = 264
+    Top = 360
   end
 end

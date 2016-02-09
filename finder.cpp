@@ -5,7 +5,7 @@
 #include <tchar.h>
 //---------------------------------------------------------------------------
 USEFORM("FindImagexExUI.cpp", Form2);
-USEFORM("Chart.cpp", FormChart);
+USEFORM("ChartView.cpp", FormChart);
 //---------------------------------------------------------------------------
 WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int)
 {

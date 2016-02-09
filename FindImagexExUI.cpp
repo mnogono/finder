@@ -8,10 +8,6 @@
 
 // ---------------------------------------------------------------------------
 #pragma package(smart_init)
-#pragma link "Chart"
-#pragma link "Series"
-#pragma link "TeEngine"
-#pragma link "TeeProcs"
 #pragma resource "*.dfm"
 TForm2 *Form2;
 
@@ -165,6 +161,14 @@ void __fastcall TForm2::ButtonStartSearchClick(TObject *Sender){
 			operation.criteriesOr.push_back(criteriaExt);
 		}
 
+		sysFind::TXMLCriteria criteriaFileName;
+		criteriaFileName.name = sysFind::TXMLCriteria::Criteria::_name;
+		criteriaFileName.fileName = "парол";
+		criteriaFileName.op = sysFind::TXMLCriteria::Operation::_like;
+		criteriaFileName.group = sysFind::TXMLCriteria::Group::_or;
+
+		operation.criteriesOr.push_back(criteriaFileName);
+
 		if (operation.criteriesOr.size() == 0){
 			MessageBox(NULL, L"Не указаны расширения файлов для поиска", L"Сообщение", MB_OK);
 			return;
@@ -172,7 +176,7 @@ void __fastcall TForm2::ButtonStartSearchClick(TObject *Sender){
 
 		xmlSettings.operations.push_back(operation);
 
-		SetEvent(hStartFinder);
+		StartFinder();
 	}
 }
 
@@ -198,36 +202,27 @@ void StringToStringGrid(wchar_t *wStringGrid, TStringGrid *stringGrid){
 
 // ---------------------------------------------------------------------------
 void __fastcall TForm2::LoadUserSettings(){
-	wchar_t *wEditIncludeFolder = sysApp::GetSetting(L"EditIncludeFolder", L"");
-	EditIncludeFolder->Text = wEditIncludeFolder;
-	delete[]wEditIncludeFolder;
+	EditIncludeFolder->Text = sysApp::GetSettingString(L"EditIncludeFolder", L"");
 
 	std::vector<std::wstring>drivers = sysFile::GetDrives();
 	std::wstring sDrivers = sysStr::JoinString(drivers.begin(), drivers.end(), L",");
-	wchar_t *wStringGridIncludes = sysApp::GetSetting(L"StringGridIncludes", sDrivers.c_str());
-	StringToStringGrid(wStringGridIncludes, StringGridIncludes);
-	delete[]wStringGridIncludes;
 
-	wchar_t *wEditExcludeFolder = sysApp::GetSetting(L"EditExcludeFolder", L"");
-	EditExcludeFolder->Text = wEditExcludeFolder;
-	delete[]wEditExcludeFolder;
+	String sStringGridIncludes = sysApp::GetSettingString(L"StringGridIncludes", sDrivers.c_str());
+	StringToStringGrid(sStringGridIncludes.c_str(), StringGridIncludes);
 
-	wchar_t *wStringGridExcludes = sysApp::GetSetting(L"StringGridExcludes", L"");
-	StringToStringGrid(wStringGridExcludes, StringGridExcludes);
-	delete[]wStringGridExcludes;
+	EditExcludeFolder->Text = sysApp::GetSettingString(L"EditExcludeFolder", L"");
+
+	String sStringGridExcludes = sysApp::GetSettingString(L"StringGridExcludes", L"");
+	StringToStringGrid(sStringGridExcludes.c_str(), StringGridExcludes);
 
 	// date filter search 2 or more days file age
 	TDateTime dt;
 	dt.Val = Now().Val - 2;
 	DateTimePickerCreated->DateTime = dt;
 
-	wchar_t *wEditExtensions = sysApp::GetSetting(L"EditExtensions", L"bmp,jpg,jpeg,pdf,tiff");
-	EditExtensions->Text = wEditExtensions;
-	delete[]wEditExtensions;
+	EditExtensions->Text = sysApp::GetSettingString(L"EditExtensions", L"bmp,jpg,jpeg,pdf,tiff");
 
-	wchar_t *wEditLogFile = sysApp::GetSetting(L"EditLogFile", L"");
-	EditLogFile->Text = wEditLogFile;
-	delete[]wEditLogFile;
+	EditLogFolder->Text = sysApp::GetSettingString(L"EditLogFolder", L"C:\\ПнД");
 
 	int ApplicationWidth = sysApp::GetSettingInt(L"ApplicationWidth", Form2->Width);
 	int ApplicationHeight = sysApp::GetSettingInt(L"ApplicationHeight", Form2->Height);
@@ -241,7 +236,7 @@ void __fastcall TForm2::SaveUserSettings(){
 
 	wchar_t *wStringGridIncludes = StringGridToString(StringGridIncludes);
 	sysApp::SetSetting(L"StringGridIncludes", wStringGridIncludes);
-	delete[]wStringGridIncludes;
+	delete []wStringGridIncludes;
 
 	sysApp::SetSetting(L"EditExcludeFolder", EditExcludeFolder->Text.c_str());
 
@@ -250,7 +245,8 @@ void __fastcall TForm2::SaveUserSettings(){
 	delete[]wStringGridExcludes;
 
 	sysApp::SetSetting(L"EditExtensions", EditExtensions->Text.c_str());
-	sysApp::SetSetting(L"EditLogFile", EditLogFile->Text.c_str());
+
+	sysApp::SetSetting(L"EditLogFolder", EditLogFolder->Text.c_str());
 
 	sysApp::SetSetting(L"ApplicationWidth", IntToStr(Width).c_str());
 	sysApp::SetSetting(L"ApplicationHeight", IntToStr(Height).c_str());
@@ -266,7 +262,13 @@ void __fastcall TForm2::CloseDB(){
 void __fastcall TForm2::FormClose(TObject *Sender, TCloseAction &Action){
 	if (InterlockedCompareExchange(&finderThread->isWorking, finderThread->isWorking, finderThread->isWorking)){
 		Action = TCloseAction::caNone;
-		if (MessageBox(NULL, L"Поиск все еще работает, остановить поиск?", L"Вопрос", MB_YESNO) == ID_YES){
+		if (isRunWithCommandLine) {
+			finderThread->Terminate();
+			finderThread->AbortWorking();
+			WaitForSingleObject(hFinderThreadTerminated, 10000);
+			Form2->Close();
+
+		} else if (MessageBox(NULL, L"Поиск все еще работает, остановить поиск?", L"Вопрос", MB_YESNO) == ID_YES){
 			finderThread->Terminate();
 			finderThread->AbortWorking();
 			WaitForSingleObject(hFinderThreadTerminated, 10000);
@@ -297,14 +299,27 @@ void __fastcall TForm2::InitializeStringGridResults(){
 
 	StringGridResults->Cells[0][1] = "";
 	StringGridResults->Cells[1][1] = "";
+
+	dataSourceStringGridResult.clear();
 }
 
 void __fastcall TForm2::ParseCommandLine(wchar_t *commandLine){
 	int arvc;
 	wchar_t **argv = CommandLineToArgvW(commandLine, &arvc);
-	if (arvc == 3){
+
+	if (TLogger::logger->CheckLogLevel(LOG_LEVEL_TRACE)) {
+		String log = String(L"arvc = ") + IntToStr(arvc);
+		TLogger::logger->Log(log.c_str(), LOG_LEVEL_TRACE, __FILE__, __FUNCTION__, __LINE__);
+		TLogger::logger->Log(commandLine, LOG_LEVEL_TRACE, __FILE__, __FUNCTION__, __LINE__);
+	}
+
+	if (arvc == 2){
+		isRunWithCommandLine = true;
 		xmlSettings.LoadFromFile(argv[1]);
-		SetEvent(hStartFinder);
+		//SetEvent(hStartFinder);
+		StartFinder();
+	} else {
+	    isRunWithCommandLine = false;
 	}
 }
 
@@ -350,9 +365,9 @@ void __fastcall TForm2::InitializeSQLiteDB() {
 
     sqlite3_exec(db, ss.str().c_str(), NULL, NULL, &err);
     if (err != NULL) {
-        TLogger::logger->Error(ss.str().c_str(), __FILE__, __FUNCTION__, __LINE__);
+		TLogger::logger->Error(ss.str().c_str(), __FILE__, __FUNCTION__, __LINE__);
         TLogger::logger->Error(err, __FILE__, __FUNCTION__, __LINE__);
-	    sqlite3_free(err);
+		sqlite3_free(err);
     }
 
     /*
@@ -378,7 +393,7 @@ void __fastcall TForm2::InitializeSQLiteDB() {
 void __fastcall TForm2::FormCreate(TObject *Sender){
 	setlocale(LC_ALL, ".1251");
 
-    TLogger::logger = new TLoggerFile(LOG_LEVEL_TRACE);
+    TLogger::logger = new TLoggerFile(LOG_LEVEL_DISABLE);
 
 	LoadUserSettings();
 	UpdateColWidths();
@@ -462,12 +477,27 @@ void __fastcall TForm2::FormResize(TObject *Sender){
 void __fastcall TForm2::Button6Click(TObject *Sender){
 	int top = StringGridResults->Selection.Top;
 	int bottom = StringGridResults->Selection.Bottom;
+	int count = 0;
 
-	if (MessageBox(NULL, L"Выбранные файлы будут удалены, продолжить?", L"Удаление", MB_YESNO) == ID_YES){
+	if (isRunWithCommandLine) {
 		for (int itRow = bottom; itRow >= top; --itRow){
 			if (sysFile::DeleteFile(StringGridResults->Cells[1][itRow].c_str())){
 				sysVCL::DeleteStringGridRow(StringGridResults, itRow);
+				++count;
 			}
+		}
+	} else {
+		if (MessageBox(NULL, L"Выбранные файлы будут удалены, продолжить?", L"Удаление", MB_YESNO) == ID_YES){
+			for (int itRow = bottom; itRow >= top; --itRow){
+				if (sysFile::DeleteFile(StringGridResults->Cells[1][itRow].c_str())){
+					sysVCL::DeleteStringGridRow(StringGridResults, itRow);
+					++count;
+				}
+			}
+
+			String msg;
+			msg.sprintf(L"Удалено %d файлов", count);
+			MessageBox(NULL, msg.c_str(), L"Сообщение", MB_OK);
 		}
 	}
 }
@@ -497,8 +527,11 @@ void __fastcall TForm2::DeleteDBFile(const TFile *file, double scanDate) {
         sPath,
         iPathSize);
 
-	//ss << "DELETE FROM file where path = '?' and created = ? and scan_date = ?";
 
+	/*
+	prepared statement:
+	"DELETE FROM file where path = '?' and created = ? and scan_date = ?";
+	*/
     errCode = sqlite3_bind_text(
         stmtDeleteFile,
         1,
@@ -514,7 +547,7 @@ void __fastcall TForm2::DeleteDBFile(const TFile *file, double scanDate) {
     errCode = sqlite3_bind_double(
         stmtDeleteFile,
         2,
-        file->created);
+		file->created);
 
     if (errCode != SQLITE_OK) {
         sprintf(log, "error code: %d", errCode);
@@ -573,7 +606,7 @@ void __fastcall TForm2::AddDBFile(const TFile *file, double scanDate) {
     if (errCode != SQLITE_OK) {
         sprintf(log, "error code: %d", errCode);
         TLogger::logger->Error(log, __FILE__, __FUNCTION__, __LINE__);
-    }
+	}
 
     errCode = sqlite3_bind_double(
         stmtInsertFile,
@@ -603,9 +636,9 @@ void __fastcall TForm2::TimerSyncFindBufferTimer(TObject *Sender){
 	EnterCriticalSection(&csSycnFindBuffer);
 
 	if (finderThread->findFilesBuffer.size()) {
-        double scanDate;
-        TDateTime dtNow = Now();
-        scanDate = dtNow.CurrentDate().Val;
+		//double scanDate;
+		//TDateTime dtNow = Now();
+        //scanDate = dtNow.Val;
 
         String sFilePath;
         TFile *file;
@@ -619,15 +652,16 @@ void __fastcall TForm2::TimerSyncFindBufferTimer(TObject *Sender){
 
         // display all buffers in String Grid Results
         for (size_t itFile = 0; itFile < finderThread->findFilesBuffer.size(); ++itFile){
-            file = &finderThread->findFilesBuffer[itFile];
+			file = &finderThread->findFilesBuffer[itFile];
 
-            StringGridResults->Cells[0][StringGridResults->RowCount - 1] = String(file->sCreated.c_str());
-            StringGridResults->Cells[1][StringGridResults->RowCount - 1] = String(file->sFilePath.c_str());
-            StringGridResults->RowCount += 1;
+			dataSourceStringGridResult.push_back(*file);
 
-            if (db != NULL) {
-                DeleteDBFile(file, scanDate);
-                AddDBFile(file, scanDate);
+			StringGridResults->Cells[0][StringGridResults->RowCount - 1] = String(file->sCreated.c_str());
+			StringGridResults->Cells[1][StringGridResults->RowCount - 1] = String(file->sFilePath.c_str());
+			StringGridResults->RowCount += 1;
+
+			if (db != NULL) {
+				AddDBFile(file, scanDateTime);
             }
         }
 
@@ -645,8 +679,23 @@ void __fastcall TForm2::TimerSyncFindBufferTimer(TObject *Sender){
 
 	if (InterlockedCompareExchange(&finderThread->isWorking, finderThread->isWorking, finderThread->isWorking) == 0){
 		if (InterlockedCompareExchange((LONG *) &finderThread->isFinished, (LONG)false, (LONG)true) == true){
-        	SaveResultsToLogFile(EditLogFile->Text);
-			MessageBox(NULL, L"Поиск завершен", L"Сообщение", MB_OK);
+			TDateTime dt(scanDateTime);
+			String sDate = dt.FormatString("yyyy.mm.dd hh nn ss");
+			String sLogFolder = EditLogFolder->Text;
+			String sLogFile = sLogFolder + String(L"\\") + sDate + String(L"_Log.csv");
+			if (!sysFile::IsFolderExist(sLogFolder.c_str())) {
+				sysFile::CreateFolder(sLogFolder.c_str());
+			}
+			SaveResultsToLogFile(sLogFile);
+			if (isRunWithCommandLine) {
+				//delete all find files automatically
+				Button5Click(NULL); // select all
+				Button6Click(NULL); // delete selected
+				Close();
+
+			} else {
+				MessageBox(NULL, L"Поиск завершен", L"Сообщение", MB_OK);
+			}
 		}
 	}
 
@@ -686,7 +735,9 @@ void __fastcall TForm2::StringGridResultsSelectCell(TObject *Sender, int ACol, i
 		} catch (...){}
 
 		delete jpeg;
-	}
+	} else {
+		Image1->Picture = NULL;
+    }
 }
 // ---------------------------------------------------------------------------
 
@@ -724,7 +775,7 @@ void __fastcall TForm2::SaveResultsToLogFile(const String &file){
 		for (int itRow = 1; itRow < StringGridResults->RowCount - 1; ++itRow){
 			sysStr::WToMB(StringGridResults->Cells[0][itRow].c_str(), sBuffer, MAX_PATH);
 			out.write(sBuffer, strlen(sBuffer));
-			out.write("\t", 1);
+			out.write("    ", 4);
 			sysStr::WToMB(StringGridResults->Cells[1][itRow].c_str(), sBuffer, MAX_PATH);
 			out.write(sBuffer, strlen(sBuffer));
 			out.write("\n", 1);
@@ -735,17 +786,165 @@ void __fastcall TForm2::SaveResultsToLogFile(const String &file){
 
 // ---------------------------------------------------------------------------
 void __fastcall TForm2::ButtonSaveLogFileClick(TObject *Sender){
-	if (SaveDialog1->Execute(NULL)){
-		EditLogFile->Text = SaveDialog1->FileName;
-
-		SaveResultsToLogFile(EditLogFile->Text);
-
-        MessageBox(NULL, L"Файл сохранен", L"Сообщение", MB_OK);
+	String sLogFolder;
+	if (SelectDirectory("Log folder", "", sLogFolder, TSelectDirExtOpts() << sdShowEdit, 0)) {
+		EditLogFolder->Text = sLogFolder;
 	}
 }
-// ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
 void __fastcall TForm2::MMChartClick(TObject *Sender){
-;
+	FormChart->SetDB(db);
+	FormChart->Show();
 }
 // ---------------------------------------------------------------------------
+
+void __fastcall TForm2::EditFilterChange(TObject *Sender) {
+	String filter = EditFilter->Text;
+	if (filter.IsEmpty()) {
+		if (dataSourceStringGridResult.empty()) {
+			StringGridResults->RowCount = 2;
+		} else {
+			StringGridResults->RowCount = dataSourceStringGridResult.size() + 1;
+		}
+
+		TFile *file;
+		for (int itFile = 0; itFile < dataSourceStringGridResult.size(); ++itFile) {
+			file = &dataSourceStringGridResult[itFile];
+			StringGridResults->Cells[0][itFile + 1] = String(file->sCreated.c_str());
+			StringGridResults->Cells[1][itFile + 1] = String(file->sFilePath.c_str());
+		}
+	} else {
+		StringGridResults->RowCount = 2;
+		StringGridResults->Cells[0][1] = "";
+		StringGridResults->Cells[1][1] = "";
+		TFile *file;
+		for (int itFile = 0; itFile < dataSourceStringGridResult.size(); ++itFile) {
+			file = &dataSourceStringGridResult[itFile];
+			if (file->sFilePath.find(filter.c_str(), 0) != std::string::npos) {
+				StringGridResults->Cells[0][StringGridResults->RowCount - 1] = String(file->sCreated.c_str());
+				StringGridResults->Cells[1][StringGridResults->RowCount - 1] = String(file->sFilePath.c_str());
+
+				StringGridResults->RowCount += 1;
+			}
+		}
+
+		if (StringGridResults->RowCount == 2) {
+			StringGridResults->Cells[1][1] = "Ничего не найдено";
+		}
+	}
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TForm2::StartFinder(){
+	TDateTime dtNow = Now();
+	scanDateTime = dtNow.Val;
+
+	SetEvent(hStartFinder);
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TForm2::MMSaveClick(TObject *Sender) {
+	if (SaveDialogSettingsXML->Execute()) {
+		String saveSettingsTo = SaveDialogSettingsXML->FileName;
+
+		//save current xml settings to specify file
+		TStringBuilder *sb = new TStringBuilder();
+
+		std::vector<std::wstring>extensions;
+		sysStr::Split(EditExtensions->Text.c_str(), L",", extensions);
+
+		String sDate = DateTimePickerCreated->DateTime.FormatString("dd.mm.yyyy hh:nn:ss");
+
+		sb->Append(String(L"<?xml version=\"1.0\" encoding=\"utf-8\" ?>"));
+		sb->Append(String(L"<settings>"));
+		sb->Append(String(L"<operation type=\"find\" entity=\"file\">"));
+		sb->Append(String(L"<criteria name=\"age\" op=\"gt\" value=\""))->Append(sDate)->Append(String(L"\" group=\"and\"/>"));
+		for (int itExt = 0; itExt < extensions.size(); ++itExt) {
+			sb->Append(String(L"<criteria name=\"ext\" op=\"eq\" value=\""))->Append(String(extensions[itExt].c_str()))->Append(String(L"\" group=\"or\"/>"));
+		}
+
+		for (int itRow = 0; itRow < StringGridIncludes->RowCount; ++itRow){
+			String sIncludeFolder = StringGridIncludes->Cells[0][itRow];
+			if (sIncludeFolder.IsEmpty()){
+				continue;
+			}
+			sb->Append(String(L"<include folder=\""))->Append(sIncludeFolder)->Append(String(L"\"/>"));
+		}
+
+		for (int itRow = 0; itRow < StringGridExcludes->RowCount; ++itRow){
+			String sExcludeFolder = StringGridExcludes->Cells[0][itRow];
+			if (sExcludeFolder.IsEmpty()){
+				continue;
+			}
+			sb->Append(String(L"<exclude folder=\""))->Append(sExcludeFolder)->Append(String(L"\"/>"));
+		}
+
+		sb->Append(String(L"</operation>"));
+		sb->Append(String(L"</settings>"));
+
+		String sXMLSettings = sb->ToString();
+
+		sysFile::WriteToFileUTF8(saveSettingsTo.c_str(), sXMLSettings.c_str());
+
+		delete sb;
+	}
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TForm2::MMLoadClick(TObject *Sender) {
+	if (OpenDialogSettingsXML->Execute()) {
+		TXMLDocument *xmlDocument = new TXMLDocument(Application);
+
+		xmlDocument->DOMVendor = GetDOMVendor("MSXML");
+		xmlDocument->Active = true;
+		xmlDocument->Encoding = "UTF-8";
+
+		xmlDocument->LoadFromFile(OpenDialogSettingsXML->FileName);
+
+		sysFind::TXMLSettings xmlSettings(xmlDocument->DocumentElement);
+
+		for (int itOper = 0; itOper < xmlSettings.operations.size(); ++itOper) {
+			sysFind::TXMLOperation &operation = xmlSettings.operations[itOper];
+			if (xmlSettings.operations[itOper].type == sysFind::TXMLOperation::Operation::_find) {
+				//date time created folder
+				std::vector<sysFind::TXMLCriteria> &criteriesAnd = xmlSettings.operations[itOper].criteriesAnd;
+				for (int it = 0; it < criteriesAnd.size(); ++it) {
+					if (criteriesAnd[it].name == sysFind::TXMLCriteria::Criteria::_created) {
+						TDateTime dt;
+						dt.Val = criteriesAnd[it].dayCreatedLocalTime;
+						DateTimePickerCreated->DateTime = dt;
+					}
+				}
+
+				//extensions
+				std::vector<sysFind::TXMLCriteria> &criteriesOr = xmlSettings.operations[itOper].criteriesOr;
+				std::vector<std::wstring> exts;
+				for (int it = 0; it < criteriesOr.size(); ++it) {
+					if (criteriesOr[it].name == sysFind::TXMLCriteria::Criteria::_ext) {
+						exts.push_back(std::wstring(criteriesOr[it].ext.c_str()));
+					}
+				}
+				wchar_t *__str = sysStr::JoinStrings(exts, L",");
+				EditExtensions->Text = String(__str);
+				delete []__str;
+
+				//include folder
+				std::vector<sysFind::TXMLInclude> &includes = operation.includes;
+				StringGridIncludes->RowCount = includes.size();
+				for (int itInclude = 0; itInclude < includes.size(); ++itInclude) {
+					StringGridIncludes->Cells[0][itInclude] = includes[itInclude].folder;
+				}
+
+				//exclude folder
+				std::vector<sysFind::TXMLExclude> &excludes = operation.excludes;
+				StringGridExcludes->RowCount = excludes.size();
+				for (int itInclude = 0; itInclude < excludes.size(); ++itInclude) {
+					StringGridExcludes->Cells[0][itInclude] = excludes[itInclude].folder;
+				}
+			}
+		}
+	}
+}
+//---------------------------------------------------------------------------
+
